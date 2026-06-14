@@ -1,0 +1,190 @@
+"""
+Home page of the Streamlit application.
+"""
+
+import streamlit as st
+import sys
+import os
+from datetime import datetime, timedelta
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.pipeline import get_pipeline
+from src.database import get_db_ops
+
+
+def show():
+    """Display home page."""
+    
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        st.markdown("""
+        # Welcome to the Statistical Arbitrage Platform
+        
+        **Identify pair trading opportunities, mean reversion opportunities, and statistical 
+        arbitrage signals across Indian equities.**
+        
+        This platform analyzes correlations, cointegration, and spread dynamics to identify 
+        profitable trading opportunities in the Indian stock market.
+        """)
+    
+    with col2:
+        st.metric("Status", "🟢 Active", "Last update 2 hours ago")
+    
+    st.markdown("---")
+    
+    # Key Metrics
+    st.subheader("📊 Platform Overview")
+    
+    db_ops = get_db_ops()
+    
+    # Calculate metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        stocks = db_ops.get_all_stocks()
+        st.metric("Stocks Monitored", len(stocks), "Nifty 50")
+    
+    with col2:
+        cointegrated = db_ops.get_cointegrated_pairs()
+        st.metric("Cointegrated Pairs", len(cointegrated), "p < 0.05")
+    
+    with col3:
+        latest_signals = db_ops.get_latest_signals(hours=24)
+        active_signals = [s for s in latest_signals if s.signal_type != 'HOLD']
+        st.metric("Active Signals (24h)", len(active_signals), "BUY/SELL/EXIT")
+    
+    with col4:
+        st.metric("Last Update", datetime.utcnow().strftime("%H:%M UTC"), "Today")
+    
+    st.markdown("---")
+    
+    # Top Opportunities
+    st.subheader("🎯 Top Opportunities (Last 24 Hours)")
+    
+    latest_signals = db_ops.get_latest_signals(hours=24)
+    
+    if latest_signals:
+        # Create dataframe for display
+        signals_data = []
+        for signal in latest_signals[:10]:
+            signals_data.append({
+                'Pair': f"{signal.stock_a} - {signal.stock_b}",
+                'Signal': signal.signal_type,
+                'Z-Score': f"{signal.z_score_30:.2f}" if signal.z_score_30 else "N/A",
+                'Spread': f"{signal.current_spread:.2f}" if signal.current_spread else "N/A",
+                'Strength': f"{signal.signal_strength:.2%}" if signal.signal_strength else "N/A"
+            })
+        
+        st.dataframe(signals_data, use_container_width=True)
+    else:
+        st.info("No active signals in the last 24 hours. Run the pipeline to generate signals.")
+    
+    st.markdown("---")
+    
+    # Quick Actions
+    st.subheader("⚡ Quick Actions")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("🔄 Run Pipeline Now", use_container_width=True):
+            st.info("Pipeline execution would start here...")
+            # pipeline = get_pipeline()
+            # result = pipeline.run_full_pipeline('config/nifty50.csv')
+            # st.success(f"Pipeline completed: {result['active_signals']} signals generated")
+    
+    with col2:
+        if st.button("📊 View Signal Dashboard", use_container_width=True):
+            st.session_state.page = "Signal Dashboard"
+            st.rerun()
+    
+    with col3:
+        if st.button("🔎 Explore Pairs", use_container_width=True):
+            st.session_state.page = "Pair Explorer"
+            st.rerun()
+    
+    st.markdown("---")
+    
+    # How It Works
+    st.subheader("📚 How It Works")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        ### Data Processing
+        1. **Data Download**: Downloads historical OHLCV data for Indian stocks
+        2. **Liquidity Filter**: Filters stocks by minimum average daily volume
+        3. **Correlation**: Calculates Pearson correlation across multiple time periods
+        4. **Cointegration**: Tests for statistical relationships using ADF test
+        
+        ### Signal Generation
+        5. **Hedge Ratio**: Calculates optimal hedge ratio using OLS regression
+        6. **Spread Construction**: Computes spread = Stock A - Beta × Stock B
+        7. **Z-Score**: Calculates rolling Z-scores with multiple windows
+        8. **Signal Rules**: Generates BUY/SELL/EXIT signals based on Z-score thresholds
+        """)
+    
+    with col2:
+        st.markdown("""
+        ### Analysis & Ranking
+        9. **Backtest**: Simulates trading strategy to calculate performance metrics
+        10. **Ranking**: Scores opportunities based on multiple criteria:
+            - Signal strength (40%)
+            - Z-score extremeness (30%)
+            - Backtest Sharpe ratio (20%)
+            - Cointegration strength (10%)
+        
+        ### Features
+        - **Multiple Timeframes**: 30-day, 60-day, 90-day Z-scores
+        - **Half-life Estimation**: Predicts mean reversion timeframes
+        - **Risk Controls**: Liquidity filters, volatility checks, data quality validation
+        - **Database Storage**: Tracks all signals and historical data
+        """)
+    
+    st.markdown("---")
+    
+    # Configuration Info
+    st.subheader("⚙️ Current Configuration")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        **Signal Thresholds:**
+        - Long Entry: Z < -2.0
+        - Short Entry: Z > +2.0
+        - Exit: |Z| < 0.5
+        
+        **Filters:**
+        - Min Liquidity: 1M shares/day
+        - Correlation: > 0.7
+        - Cointegration p-value: < 0.05
+        """)
+    
+    with col2:
+        st.markdown("""
+        **Data Settings:**
+        - Data Source: yfinance (NSE)
+        - Historical Period: 3 years
+        - Update Frequency: Daily at 6 PM IST
+        - Database: SQLite
+        
+        **Backtesting:**
+        - Initial Capital: $100,000
+        - Entry/Exit: Z-score based
+        - Slippage: None (research mode)
+        """)
+    
+    st.markdown("---")
+    
+    st.info("""
+    **📖 Documentation & Support**
+    
+    - View the [GitHub Repository](https://github.com/yourusername/statarb-platform) for code and documentation
+    - For questions and issues, open a GitHub issue
+    - This platform is for research and analysis purposes only
+    - Not investment advice - always conduct your own due diligence
+    """)

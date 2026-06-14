@@ -1,0 +1,82 @@
+name: Daily Statistical Arbitrage Pipeline
+
+on:
+  schedule:
+    # Run at 6 PM IST (12:30 PM UTC) every day
+    - cron: '30 12 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run Statistical Arbitrage Pipeline
+      env:
+        DB_PATH: ${{ secrets.DB_PATH }}
+        DATA_DIR: ${{ secrets.DATA_DIR }}
+      run: |
+        python src/pipeline.py
+    
+    - name: Commit and push results
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # Add updated data files
+        git add data/
+        git add src/database/
+        
+        # Only commit if there are changes
+        if git diff-index --quiet HEAD --; then
+          echo "No changes to commit"
+        else
+          git commit -m "Daily pipeline update - $(date +%Y-%m-%d)"
+          git push
+        fi
+      
+      # Continue even if no changes
+      continue-on-error: true
+    
+    - name: Send Slack notification on failure
+      if: failure()
+      uses: slackapi/slack-github-action@v1.24.0
+      with:
+        payload: |
+          {
+            "text": "Statistical Arbitrage Pipeline Failed",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Daily Pipeline Run Failed* ⚠️\n*Repository:* ${{ github.repository }}\n*Branch:* ${{ github.ref }}\n*Run:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
+                }
+              }
+            ]
+          }
+        webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        webhook-type: incoming-webhook
+      continue-on-error: true

@@ -1,0 +1,198 @@
+"""
+Database models for Statistical Arbitrage Platform.
+"""
+
+from datetime import datetime
+from sqlalchemy import create_engine, Column, String, Float, DateTime, Integer, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+import os
+
+Base = declarative_base()
+
+
+class Stock(Base):
+    """Stores information about individual stocks."""
+    __tablename__ = 'stocks'
+    
+    id = Column(Integer, primary_key=True)
+    symbol = Column(String(20), unique=True, nullable=False, index=True)
+    company_name = Column(String(255))
+    sector = Column(String(100))
+    nifty_index = Column(String(50))  # NIFTY50, NIFTY100, etc.
+    active = Column(Boolean, default=True)
+    last_price = Column(Float)
+    last_updated = Column(DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<Stock {self.symbol}>"
+
+
+class OHLCVData(Base):
+    """Stores OHLCV data for stocks."""
+    __tablename__ = 'ohlcv_data'
+    
+    id = Column(Integer, primary_key=True)
+    symbol = Column(String(20), nullable=False, index=True)
+    date = Column(DateTime, nullable=False, index=True)
+    open = Column(Float)
+    high = Column(Float)
+    low = Column(Float)
+    close = Column(Float)
+    volume = Column(Float)
+    
+    def __repr__(self):
+        return f"<OHLCVData {self.symbol} {self.date}>"
+
+
+class Pair(Base):
+    """Stores pair information."""
+    __tablename__ = 'pairs'
+    
+    id = Column(Integer, primary_key=True)
+    stock_a = Column(String(20), nullable=False, index=True)
+    stock_b = Column(String(20), nullable=False, index=True)
+    correlation_1y = Column(Float)
+    correlation_2y = Column(Float)
+    correlation_3y = Column(Float)
+    active = Column(Boolean, default=True)
+    created_date = Column(DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<Pair {self.stock_a}-{self.stock_b}>"
+
+
+class CointegrationResult(Base):
+    """Stores cointegration test results."""
+    __tablename__ = 'cointegration_results'
+    
+    id = Column(Integer, primary_key=True)
+    stock_a = Column(String(20), nullable=False, index=True)
+    stock_b = Column(String(20), nullable=False, index=True)
+    test_statistic = Column(Float)
+    p_value = Column(Float)
+    critical_values = Column(String(255))  # JSON string
+    cointegrated = Column(Boolean)
+    hedge_ratio = Column(Float)
+    test_date = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    def __repr__(self):
+        return f"<CointegrationResult {self.stock_a}-{self.stock_b} p={self.p_value:.4f}>"
+
+
+class SpreadStatistics(Base):
+    """Stores spread statistics for pairs."""
+    __tablename__ = 'spread_statistics'
+    
+    id = Column(Integer, primary_key=True)
+    stock_a = Column(String(20), nullable=False, index=True)
+    stock_b = Column(String(20), nullable=False, index=True)
+    mean_spread = Column(Float)
+    std_spread = Column(Float)
+    median_spread = Column(Float)
+    min_spread = Column(Float)
+    max_spread = Column(Float)
+    half_life = Column(Float)  # Days to revert to mean
+    period_days = Column(Integer)  # Lookback period
+    calculated_date = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    def __repr__(self):
+        return f"<SpreadStatistics {self.stock_a}-{self.stock_b}>"
+
+
+class Signal(Base):
+    """Stores trading signals."""
+    __tablename__ = 'signals'
+    
+    id = Column(Integer, primary_key=True)
+    stock_a = Column(String(20), nullable=False, index=True)
+    stock_b = Column(String(20), nullable=False, index=True)
+    signal_type = Column(String(20))  # BUY, SELL, EXIT, HOLD
+    z_score_30d = Column(Float)
+    z_score_60d = Column(Float)
+    z_score_90d = Column(Float)
+    current_spread = Column(Float)
+    signal_strength = Column(Float)  # 0 to 1
+    created_date = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    def __repr__(self):
+        return f"<Signal {self.stock_a}-{self.stock_b} {self.signal_type}>"
+
+
+class SignalHistory(Base):
+    """Stores historical signals for tracking changes."""
+    __tablename__ = 'signal_history'
+    
+    id = Column(Integer, primary_key=True)
+    stock_a = Column(String(20), nullable=False, index=True)
+    stock_b = Column(String(20), nullable=False, index=True)
+    signal_type = Column(String(20))
+    z_score = Column(Float)
+    spread = Column(Float)
+    created_date = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    def __repr__(self):
+        return f"<SignalHistory {self.stock_a}-{self.stock_b} {self.created_date}>"
+
+
+class BacktestResult(Base):
+    """Stores backtesting results."""
+    __tablename__ = 'backtest_results'
+    
+    id = Column(Integer, primary_key=True)
+    stock_a = Column(String(20), nullable=False, index=True)
+    stock_b = Column(String(20), nullable=False, index=True)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+    entry_threshold = Column(Float)
+    exit_threshold = Column(Float)
+    total_return = Column(Float)
+    annualized_return = Column(Float)
+    sharpe_ratio = Column(Float)
+    sortino_ratio = Column(Float)
+    max_drawdown = Column(Float)
+    hit_rate = Column(Float)
+    profit_factor = Column(Float)
+    num_trades = Column(Integer)
+    avg_holding_days = Column(Float)
+    backtest_date = Column(DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<BacktestResult {self.stock_a}-{self.stock_b} return={self.total_return:.2f}%>"
+
+
+class DatabaseManager:
+    """Manages database connections and sessions."""
+    
+    _instance = None
+    
+    def __new__(cls, db_path: str = None):
+        if cls._instance is None:
+            cls._instance = super(DatabaseManager, cls).__new__(cls)
+            if db_path is None:
+                db_path = os.path.join(
+                    os.path.dirname(__file__), 
+                    '..', '..', 'data', 'statarb.db'
+                )
+            cls._instance.db_path = f"sqlite:///{db_path}"
+            cls._instance.engine = create_engine(cls._instance.db_path)
+            cls._instance.SessionLocal = sessionmaker(bind=cls._instance.engine)
+            Base.metadata.create_all(cls._instance.engine)
+        return cls._instance
+    
+    def get_session(self):
+        """Get a new database session."""
+        return self.SessionLocal()
+    
+    def create_tables(self):
+        """Create all tables."""
+        Base.metadata.create_all(self.engine)
+    
+    def drop_tables(self):
+        """Drop all tables (use with caution)."""
+        Base.metadata.drop_all(self.engine)
+
+
+def init_db(db_path: str = None) -> DatabaseManager:
+    """Initialize database."""
+    return DatabaseManager(db_path)

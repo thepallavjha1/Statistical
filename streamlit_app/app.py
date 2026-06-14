@@ -1,0 +1,121 @@
+"""
+Streamlit App Configuration and Main Entry Point
+"""
+
+import streamlit as st
+import sys
+import os
+
+# Add src to path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Configure page
+st.set_page_config(
+    page_title="Statistical Arbitrage Platform - Indian Equities",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Custom CSS for dark mode support
+st.markdown("""
+<style>
+    :root {
+        --primary-color: #1f77b4;
+        --background-color: #0e1117;
+        --secondary-background-color: #161b22;
+        --text-color: #c9d1d9;
+    }
+    
+    .metric-card {
+        background-color: var(--secondary-background-color);
+        padding: 20px;
+        border-radius: 10px;
+        margin: 10px 0;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .signal-buy {
+        color: #00ff00;
+        font-weight: bold;
+    }
+    
+    .signal-sell {
+        color: #ff0000;
+        font-weight: bold;
+    }
+    
+    .signal-exit {
+        color: #ffff00;
+        font-weight: bold;
+    }
+    
+    .stMetric {
+        background-color: var(--secondary-background-color);
+        padding: 10px;
+        border-radius: 5px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Session state initialization
+if 'selected_pair' not in st.session_state:
+    st.session_state.selected_pair = None
+
+if 'page' not in st.session_state:
+    st.session_state.page = 'Home'
+
+# Sidebar navigation
+st.sidebar.title("📊 Statistical Arbitrage Platform")
+st.sidebar.markdown("---")
+
+page = st.sidebar.radio(
+    "Navigation",
+    ["Home", "Signal Dashboard", "Pair Explorer", "Backtest", "Analytics"],
+    key="nav_radio"
+)
+
+st.session_state.page = page
+
+# Display version info in sidebar
+st.sidebar.markdown("---")
+st.sidebar.markdown("""
+**Version:** 1.0.0  
+**Data Source:** yfinance (NSE)  
+**Market:** Indian Equities  
+**Status:** 🟢 Active
+""")
+
+# Display page title
+st.title(f"📈 {page}")
+
+# Load and display selected page
+if page == "Home":
+    from pages import home
+    home.show()
+
+elif page == "Signal Dashboard":
+    from pages import signals_dashboard
+    signals_dashboard.show()
+
+elif page == "Pair Explorer":
+    from pages import pair_explorer
+    pair_explorer.show()
+
+elif page == "Backtest":
+    from pages import backtest
+    backtest.show()
+
+elif page == "Analytics":
+    from pages import analytics
+    analytics.show()
+
+# Footer
+st.markdown("---")
+st.markdown("""
+<div style="text-align: center; color: #888; padding: 20px;">
+    <p>Statistical Arbitrage Signal Platform for Indian Equities</p>
+    <p>Designed for institutional traders and quantitative researchers</p>
+    <p>Not investment advice. For research and analysis purposes only.</p>
+</div>
+""", unsafe_allow_html=True)
