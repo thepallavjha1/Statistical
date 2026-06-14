@@ -2,6 +2,14 @@
 Main pipeline orchestrator for the Statistical Arbitrage Platform.
 """
 
+import sys
+import os
+
+# Allow `python src/pipeline.py` from project root (local + GitHub Actions)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 import logging
 import time
 from datetime import datetime
