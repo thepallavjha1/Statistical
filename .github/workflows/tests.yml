@@ -72,11 +72,16 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
     
     - name: Run Bandit security check
-      uses: gaurav-nelson/github-action-bandit@v1
-      with:
-        path: "src"
+      run: |
+        pip install bandit
+        bandit -r src/ -q
       continue-on-error: true
     
     - name: Dependency check
