@@ -24,8 +24,12 @@ class TestDatabase:
         """Test database end-to-end operations."""
         from src.database import DatabaseOperations
         
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=True) as tmp:
-            db_ops = DatabaseOperations(tmp.name)
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            tmp_path = tmp.name
+            tmp.close()
+            
+        try:
+            db_ops = DatabaseOperations(tmp_path)
             
             # Add and retrieve stock
             db_ops.add_stock('RELIANCE', 'Reliance Industries', 'Energy', 'NIFTY50')
@@ -57,6 +61,14 @@ class TestDatabase:
             # Verify retrieval
             cointegrated = db_ops.get_cointegrated_pairs(threshold=0.05)
             assert len(cointegrated) > 0
+        finally:
+            if 'db_ops' in locals() and db_ops:
+                try:
+                    db_ops.db.engine.dispose()
+                except Exception:
+                    pass
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
 
 
 if __name__ == '__main__':

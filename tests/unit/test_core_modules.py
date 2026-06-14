@@ -137,9 +137,14 @@ class TestDatabase:
         """Test database operations."""
         from src.database import DatabaseOperations
         import tempfile
+        import os
         
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=True) as tmp:
-            db_ops = DatabaseOperations(tmp.name)
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+            tmp_path = tmp.name
+            tmp.close()
+            
+        try:
+            db_ops = DatabaseOperations(tmp_path)
             
             # Test adding a stock
             stock = db_ops.add_stock('TEST', 'Test Company', 'Test Sector', 'NIFTY50')
@@ -149,6 +154,14 @@ class TestDatabase:
             retrieved = db_ops.get_stock('TEST')
             assert retrieved is not None
             assert retrieved.symbol == 'TEST'
+        finally:
+            if 'db_ops' in locals() and db_ops:
+                try:
+                    db_ops.db.engine.dispose()
+                except Exception:
+                    pass
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
 
 
 class TestUtilities:

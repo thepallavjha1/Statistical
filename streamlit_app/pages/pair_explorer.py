@@ -21,15 +21,57 @@ def show():
     
     st.markdown("Search and analyze specific pairs")
     
+    # Initialize defaults
+    if "pair_a" not in st.session_state:
+        st.session_state.pair_a = "RELIANCE"
+    if "pair_b" not in st.session_state:
+        st.session_state.pair_b = "TCS"
+        
+    analyze_clicked = False
+    
+    # Handle redirect from Home or Signal Dashboard
+    if 'selected_pair' in st.session_state and st.session_state.selected_pair:
+        stock_a, stock_b = st.session_state.selected_pair
+        st.session_state.pair_a = stock_a
+        st.session_state.pair_b = stock_b
+        st.session_state.selected_pair = None  # Consume the redirect selection
+        analyze_clicked = True
+
+    db_ops = get_db_ops()
+    coint_pairs = db_ops.get_cointegrated_pairs(threshold=0.05)
+    
+    if coint_pairs:
+        # Quick Select Dropdown
+        pair_options = ["-- Select a Cointegrated Pair --"] + [
+            f"{p.stock_a} / {p.stock_b} (p-val: {p.p_value:.4f})" for p in coint_pairs
+        ]
+        
+        selected_option = st.selectbox(
+            "🎯 Quick Select Cointegrated Pair",
+            pair_options,
+            key="quick_select_pair"
+        )
+        
+        if selected_option != "-- Select a Cointegrated Pair --":
+            # Extract symbols
+            pair_part = selected_option.split(" (")[0]
+            stock_a, stock_b = [s.strip() for s in pair_part.split("/")]
+            
+            # If selection has changed, update inputs and trigger analyze
+            if st.session_state.pair_a != stock_a or st.session_state.pair_b != stock_b:
+                st.session_state.pair_a = stock_a
+                st.session_state.pair_b = stock_b
+                analyze_clicked = True
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        symbol_a = st.text_input("Stock A", "RELIANCE", key="pair_a").upper()
+        symbol_a = st.text_input("Stock A", key="pair_a").upper()
     
     with col2:
-        symbol_b = st.text_input("Stock B", "TCS", key="pair_b").upper()
+        symbol_b = st.text_input("Stock B", key="pair_b").upper()
     
-    if st.button("Analyze Pair"):
+    if st.button("Analyze Pair") or analyze_clicked:
         st.markdown("---")
         
         data_mgr = get_data_manager()

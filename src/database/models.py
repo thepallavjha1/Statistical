@@ -179,6 +179,19 @@ class DatabaseManager:
     _instance = None
     
     def __new__(cls, db_path: str = None):
+        if db_path is not None:
+            normalized_path = f"sqlite:///{db_path}"
+            if cls._instance is not None and cls._instance.db_path != normalized_path:
+                instance = super(DatabaseManager, cls).__new__(cls)
+                instance.db_path = normalized_path
+                instance.engine = create_engine(normalized_path)
+                instance.SessionLocal = sessionmaker(
+                    bind=instance.engine,
+                    expire_on_commit=False
+                )
+                Base.metadata.create_all(instance.engine)
+                return instance
+
         if cls._instance is None:
             cls._instance = super(DatabaseManager, cls).__new__(cls)
             if db_path is None:

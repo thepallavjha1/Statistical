@@ -69,12 +69,15 @@ def show():
     st.subheader("🎯 Top Opportunities (Last 24 Hours)")
     
     latest_signals = db_ops.get_latest_signals(hours=24)
+    active_signals = [s for s in latest_signals if s.signal_type != 'HOLD']
     
-    if latest_signals:
+    if active_signals:
         # Create dataframe for display
         signals_data = []
-        for signal in latest_signals[:10]:
+        for signal in active_signals[:10]:
             signals_data.append({
+                'Stock A': signal.stock_a,
+                'Stock B': signal.stock_b,
                 'Pair': f"{signal.stock_a} - {signal.stock_b}",
                 'Signal': signal.signal_type,
                 'Z-Score': f"{signal.z_score_30:.2f}" if signal.z_score_30 else "N/A",
@@ -82,7 +85,23 @@ def show():
                 'Strength': f"{signal.signal_strength:.2%}" if signal.signal_strength else "N/A"
             })
         
-        st.dataframe(signals_data, use_container_width=True)
+        df = pd.DataFrame(signals_data)
+        st.info("💡 Click on any row in the table below to explore that pair in detail in the Pair Explorer.")
+        
+        event = st.dataframe(
+            df[['Pair', 'Signal', 'Z-Score', 'Spread', 'Strength']],
+            use_container_width=True,
+            on_select="rerun",
+            selection_mode="single_row",
+            key="home_signals_df"
+        )
+        
+        if event and event.selection and event.selection.get("rows"):
+            selected_row_idx = event.selection["rows"][0]
+            selected_row = df.iloc[selected_row_idx]
+            st.session_state.selected_pair = (selected_row['Stock A'], selected_row['Stock B'])
+            st.session_state.nav_radio = "Pair Explorer"
+            st.rerun()
     else:
         st.info("No active signals in the last 24 hours. Run the pipeline to generate signals.")
     

@@ -76,6 +76,7 @@ def show():
         
         # Signal table
         st.subheader("📋 Active Signals")
+        st.info("💡 Click on any row in the table below to explore that pair in detail in the Pair Explorer.")
         
         # Format for display
         display_df = df[['Pair', 'Signal', 'Z-Score 30d', 'Spread', 'Strength']].copy()
@@ -83,7 +84,20 @@ def show():
         display_df['Spread'] = display_df['Spread'].apply(lambda x: f"{x:.2f}" if x else "N/A")
         display_df['Strength'] = display_df['Strength'].apply(lambda x: f"{x:.2%}" if x else "N/A")
         
-        st.dataframe(display_df, use_container_width=True)
+        event = st.dataframe(
+            display_df,
+            use_container_width=True,
+            on_select="rerun",
+            selection_mode="single_row",
+            key="signals_dashboard_df"
+        )
+        
+        if event and event.selection and event.selection.get("rows"):
+            selected_row_idx = event.selection["rows"][0]
+            selected_row = df.iloc[selected_row_idx]
+            st.session_state.selected_pair = (selected_row['Stock A'], selected_row['Stock B'])
+            st.session_state.nav_radio = "Pair Explorer"
+            st.rerun()
         
         st.markdown("---")
         
