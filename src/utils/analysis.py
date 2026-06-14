@@ -4,7 +4,7 @@ Utility functions for statistical calculations and helpers.
 
 import numpy as np
 import pandas as pd
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ class DataValidator:
     """Validates data quality."""
     
     @staticmethod
-    def check_price_data(data: pd.DataFrame) -> Dict[str, any]:
+    def check_price_data(data: pd.DataFrame) -> Dict[str, Any]:
         """Check for common data issues."""
         
         checks = {

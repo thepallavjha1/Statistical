@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 import logging
 
 # Import configuration
@@ -190,7 +190,7 @@ class DataIngestionManager:
         normalized = (prices - min_price) / (max_price - min_price)
         return normalized
     
-    def data_quality_check(self, data: pd.DataFrame) -> Dict[str, any]:
+    def data_quality_check(self, data: pd.DataFrame) -> Dict[str, Any]:
         """Check data quality."""
         checks = {
             'total_records': len(data),

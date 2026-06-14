@@ -1,3 +1,5 @@
+# Python 3.9+ required (pandas 2.x / yfinance use modern type hints)
+
 # Core Data and Numerical Computing
 pandas>=2.0.0
 numpy>=1.24.0
