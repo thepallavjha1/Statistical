@@ -3,6 +3,7 @@ Main pipeline orchestrator for the Statistical Arbitrage Platform.
 """
 
 import logging
+import time
 from datetime import datetime
 from typing import List, Dict, Optional
 
@@ -42,8 +43,12 @@ class StatArbPipeline:
             # Step 1: Load and update data
             logger.info("\n[STEP 1] Loading and updating data...")
             symbols = self.data_manager.load_universe(universe_file)
-            for symbol in symbols:
+            self._sync_universe_stocks(universe_file, symbols)
+            for i, symbol in enumerate(symbols):
                 self.data_manager.update_stock_data(symbol)
+                if i % 25 == 0 and i > 0:
+                    logger.info(f"Downloaded {i}/{len(symbols)} stocks...")
+                time.sleep(0.1)
             
             logger.info(f"Updated {len(symbols)} stocks")
             
@@ -151,6 +156,32 @@ class StatArbPipeline:
         ]
         return pairs_list[:limit]
 
+    def _sync_universe_stocks(self, universe_file: str, symbols: List[str]):
+        """Register universe stocks in the database."""
+        import pandas as pd
+        try:
+            from config import STOCK_UNIVERSE
+        except ImportError:
+            STOCK_UNIVERSE = "NIFTY500"
+
+        try:
+            universe_df = pd.read_csv(universe_file)
+            meta = {
+                row['symbol']: row
+                for _, row in universe_df.iterrows()
+                if pd.notna(row.get('symbol'))
+            }
+        except Exception:
+            meta = {}
+
+        for symbol in symbols:
+            if self.db_ops.get_stock(symbol):
+                continue
+            row = meta.get(symbol)
+            company_name = row['company_name'] if row is not None and 'company_name' in row else None
+            sector = row['sector'] if row is not None and 'sector' in row else None
+            self.db_ops.add_stock(symbol, company_name, sector, STOCK_UNIVERSE)
+
 
 # Global instance
 _pipeline = None
@@ -165,11 +196,13 @@ def get_pipeline() -> StatArbPipeline:
 
 
 if __name__ == '__main__':
-    import os
-    
-    # Get config path
-    config_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'config')
-    universe_file = os.path.join(config_dir, 'nifty50.csv')
+    try:
+        from config import UNIVERSE_FILE
+        universe_file = UNIVERSE_FILE
+    except ImportError:
+        import os
+        config_dir = os.path.join(os.path.dirname(__file__), '..', 'config')
+        universe_file = os.path.join(config_dir, 'nifty500.csv')
     
     # Run pipeline
     pipeline = get_pipeline()

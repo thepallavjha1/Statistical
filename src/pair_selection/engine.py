@@ -59,32 +59,77 @@ class PairSelectionEngine:
     def find_correlated_pairs(self, symbols: List[str],
                              lookback_days: int = 252) -> List[Dict]:
         """Find all correlated pairs."""
+        if len(symbols) > 50:
+            return self._find_correlated_pairs_matrix(symbols, lookback_days)
+
         pairs = []
         n = len(symbols)
-        
+
         logger.info(f"Finding correlated pairs from {n} stocks (threshold={self.correlation_threshold})")
-        
+
         total_combinations = len(list(combinations(symbols, 2)))
         count = 0
-        
+
         for symbol_a, symbol_b in combinations(symbols, 2):
             count += 1
             if count % 100 == 0:
                 logger.info(f"Processed {count}/{total_combinations} combinations")
-            
+
             correlation = self.calculate_correlation(symbol_a, symbol_b, lookback_days)
-            
+
             if not np.isnan(correlation) and abs(correlation) >= self.correlation_threshold:
                 pairs.append({
                     'stock_a': symbol_a,
                     'stock_b': symbol_b,
                     'correlation': correlation
                 })
-        
-        # Sort by absolute correlation
+
         pairs.sort(key=lambda x: abs(x['correlation']), reverse=True)
         logger.info(f"Found {len(pairs)} correlated pairs")
-        
+
+        return pairs
+
+    def _find_correlated_pairs_matrix(self, symbols: List[str],
+                                      lookback_days: int = 252) -> List[Dict]:
+        """Fast pair scan using a single correlation matrix (for large universes)."""
+        logger.info(
+            f"Matrix scan for {len(symbols)} stocks (threshold={self.correlation_threshold})"
+        )
+
+        returns = {}
+        for symbol in symbols:
+            prices = self.data_manager.get_price_series(symbol)
+            if prices is None or prices.empty:
+                continue
+            series = prices.tail(lookback_days).pct_change().dropna()
+            if len(series) >= 20:
+                returns[symbol] = series
+
+        if len(returns) < 2:
+            logger.warning("Not enough price data for correlation matrix")
+            return []
+
+        returns_df = pd.DataFrame(returns).dropna(how='any')
+        if returns_df.shape[0] < 20:
+            logger.warning("Not enough overlapping dates for correlation matrix")
+            return []
+
+        corr_matrix = returns_df.corr()
+        pairs = []
+
+        for i, symbol_a in enumerate(corr_matrix.columns):
+            for j in range(i + 1, len(corr_matrix.columns)):
+                symbol_b = corr_matrix.columns[j]
+                correlation = corr_matrix.iloc[i, j]
+                if not np.isnan(correlation) and abs(correlation) >= self.correlation_threshold:
+                    pairs.append({
+                        'stock_a': symbol_a,
+                        'stock_b': symbol_b,
+                        'correlation': correlation
+                    })
+
+        pairs.sort(key=lambda x: abs(x['correlation']), reverse=True)
+        logger.info(f"Found {len(pairs)} correlated pairs")
         return pairs
     
     def find_pairs_for_symbol(self, symbol: str, symbols: List[str],

@@ -115,6 +115,18 @@ class Signal(Base):
     signal_strength = Column(Float)  # 0 to 1
     created_date = Column(DateTime, default=datetime.utcnow, index=True)
     
+    @property
+    def z_score_30(self):
+        return self.z_score_30d
+
+    @property
+    def z_score_60(self):
+        return self.z_score_60d
+
+    @property
+    def z_score_90(self):
+        return self.z_score_90d
+
     def __repr__(self):
         return f"<Signal {self.stock_a}-{self.stock_b} {self.signal_type}>"
 
@@ -170,10 +182,14 @@ class DatabaseManager:
         if cls._instance is None:
             cls._instance = super(DatabaseManager, cls).__new__(cls)
             if db_path is None:
-                db_path = os.path.join(
-                    os.path.dirname(__file__), 
-                    '..', '..', 'data', 'statarb.db'
-                )
+                try:
+                    from config import DB_PATH
+                    db_path = DB_PATH
+                except ImportError:
+                    db_path = os.path.join(
+                        os.path.dirname(__file__),
+                        '..', '..', 'data', 'statarb.db'
+                    )
             cls._instance.db_path = f"sqlite:///{db_path}"
             cls._instance.engine = create_engine(cls._instance.db_path)
             cls._instance.SessionLocal = sessionmaker(bind=cls._instance.engine)

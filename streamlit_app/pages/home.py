@@ -7,10 +7,12 @@ import sys
 import os
 from datetime import datetime, timedelta
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from src.pipeline import get_pipeline
 from src.database import get_db_ops
+from config import STOCK_UNIVERSE, UNIVERSE_FILE
+import pandas as pd
 
 
 def show():
@@ -43,8 +45,11 @@ def show():
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        stocks = db_ops.get_all_stocks()
-        st.metric("Stocks Monitored", len(stocks), "Nifty 50")
+        try:
+            universe_size = len(pd.read_csv(UNIVERSE_FILE))
+        except Exception:
+            universe_size = len(db_ops.get_all_stocks())
+        st.metric("Stocks Monitored", universe_size, STOCK_UNIVERSE)
     
     with col2:
         cointegrated = db_ops.get_cointegrated_pairs()
@@ -90,10 +95,16 @@ def show():
     
     with col1:
         if st.button("🔄 Run Pipeline Now", use_container_width=True):
-            st.info("Pipeline execution would start here...")
-            # pipeline = get_pipeline()
-            # result = pipeline.run_full_pipeline('config/nifty50.csv')
-            # st.success(f"Pipeline completed: {result['active_signals']} signals generated")
+            with st.spinner("Running pipeline — this may take 30-60 minutes for NIFTY 500..."):
+                pipeline = get_pipeline()
+                result = pipeline.run_full_pipeline(UNIVERSE_FILE)
+                if result.get('status') == 'SUCCESS':
+                    st.success(
+                        f"Pipeline completed: {result['active_signals']} signals generated"
+                    )
+                    st.rerun()
+                else:
+                    st.error(f"Pipeline failed: {result.get('error', 'Unknown error')}")
     
     with col2:
         if st.button("📊 View Signal Dashboard", use_container_width=True):

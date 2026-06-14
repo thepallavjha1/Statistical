@@ -28,7 +28,8 @@ CORRELATION_THRESHOLD = 0.7  # Minimum correlation for pair selection
 COINTEGRATION_PVALUE = 0.05  # P-value threshold for cointegration test
 
 # === Stock Universe ===
-STOCK_UNIVERSE = "NIFTY50"  # Can be: NIFTY50, NIFTY100, NIFTY200
+STOCK_UNIVERSE = "NIFTY500"  # NIFTY50, NIFTY100, NIFTY500
+UNIVERSE_FILE = str(PROJECT_ROOT / "config" / "nifty500.csv")
 
 # === Data Download Configuration ===
 YFINANCE_RATE_LIMIT = 0.1   # Rate limit in seconds
@@ -59,7 +60,4 @@ DEFAULT_CHART_HEIGHT = 500
 DEFAULT_CHART_WIDTH = 900
 DATE_FORMAT = "%Y-%m-%d"
 
-print(f"✓ Configuration loaded from {__file__}")
-print(f"  Database: {DB_PATH}")
-print(f"  Data Directory: {DATA_DIR}")
-print(f"  Stock Universe: {STOCK_UNIVERSE}")
+print(f"Configuration loaded from {__file__}")

@@ -6,8 +6,25 @@ import streamlit as st
 import sys
 import os
 
-# Add src to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add project root and streamlit_app to path
+STREAMLIT_APP_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(STREAMLIT_APP_DIR)
+for path in (PROJECT_ROOT, STREAMLIT_APP_DIR):
+    if path not in sys.path:
+        sys.path.insert(0, path)
+
+
+def _ensure_data_ready():
+    """Initialize sample data on first run (local dev + Streamlit Cloud)."""
+    from src.database import get_db_ops
+    from initialize_db import init_sample_data
+
+    db_ops = get_db_ops()
+    if not db_ops.get_all_stocks():
+        init_sample_data()
+
+
+_ensure_data_ready()
 
 # Configure page
 st.set_page_config(

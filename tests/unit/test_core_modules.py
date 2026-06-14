@@ -23,11 +23,11 @@ class TestDataIngestion:
         import os
         
         manager = DataIngestionManager()
-        config_dir = os.path.join(os.path.dirname(__file__), '..', 'config')
-        universe_file = os.path.join(config_dir, 'nifty50.csv')
+        config_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'config')
+        universe_file = os.path.join(config_dir, 'nifty500.csv')
         
         symbols = manager.load_universe(universe_file)
-        assert len(symbols) > 0
+        assert len(symbols) >= 500
         assert 'RELIANCE' in symbols
 
 

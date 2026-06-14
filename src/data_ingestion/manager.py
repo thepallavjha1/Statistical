@@ -58,9 +58,13 @@ class DataIngestionManager:
             if data.empty:
                 logger.warning(f"No data downloaded for {symbol}")
                 return pd.DataFrame()
-            
+
+            # Flatten MultiIndex columns from newer yfinance versions
+            if isinstance(data.columns, pd.MultiIndex):
+                data.columns = data.columns.get_level_values(0)
+
             # Rename columns to lowercase
-            data.columns = [col.lower() for col in data.columns]
+            data.columns = [str(col).lower() for col in data.columns]
             
             # Reset index to make date a column
             data.reset_index(inplace=True)
