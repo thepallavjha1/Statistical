@@ -192,7 +192,10 @@ class DatabaseManager:
                     )
             cls._instance.db_path = f"sqlite:///{db_path}"
             cls._instance.engine = create_engine(cls._instance.db_path)
-            cls._instance.SessionLocal = sessionmaker(bind=cls._instance.engine)
+            cls._instance.SessionLocal = sessionmaker(
+                bind=cls._instance.engine,
+                expire_on_commit=False
+            )
             Base.metadata.create_all(cls._instance.engine)
         return cls._instance
     
