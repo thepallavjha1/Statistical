@@ -10,11 +10,20 @@ from .models import (
     Signal, SignalHistory, BacktestResult, init_db
 )
 
+# Import configuration
+try:
+    from config import DB_PATH
+except ImportError:
+    DB_PATH = None
+
 
 class DatabaseOperations:
     """Handles all database operations."""
     
     def __init__(self, db_path: str = None):
+        # Use config DB_PATH if not provided
+        if db_path is None:
+            db_path = DB_PATH
         self.db = init_db(db_path)
     
     # Stock operations

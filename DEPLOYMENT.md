@@ -1,103 +1,242 @@
-# Deployment Guide
+# ☁️ Deploy to Streamlit Cloud
 
-## Prerequisites
-- GitHub account
-- Streamlit Cloud account (free)
-- Python 3.8+
+Get your dashboard live in the cloud (completely free!)
 
-## Option 1: Deploy to Streamlit Cloud (Recommended)
+---
 
-### Step 1: Prepare Repository
+## ✅ Prerequisites
+
+- ✓ GitHub account (free: github.com)
+- ✓ Streamlit Cloud account (free: share.streamlit.io)
+- ✓ Working local version (follow [SIMPLE_START.md](SIMPLE_START.md))
+
+---
+
+## 🚀 5-Step Deployment
+
+### Step 1: Push to GitHub
+
 ```bash
-# Ensure requirements.txt is up to date
-pip freeze > requirements.txt
+cd ~/Statistical  # or C:\Users\Asus\Statistical on Windows
 
-# Create .streamlit directory
-mkdir -p .streamlit
-
-# Create config.toml
-cat > .streamlit/config.toml << EOF
-[theme]
-primaryColor = "#1f77b4"
-backgroundColor = "#0e1117"
-secondaryBackgroundColor = "#161b22"
-textColor = "#c9d1d9"
-font = "sans serif"
-
-[server]
-headless = true
-port = 8501
-EOF
-
-# Ensure secrets.toml is in .gitignore
-echo ".streamlit/secrets.toml" >> .gitignore
-```
-
-### Step 2: Push to GitHub
-```bash
+# Add all changes
 git add .
-git commit -m "Prepare for Streamlit Cloud deployment"
+
+# Commit
+git commit -m "Simplify: hardcoded config, no Docker, Streamlit Cloud ready"
+
+# Push to GitHub
 git push origin main
 ```
 
-### Step 3: Deploy on Streamlit Cloud
-1. Go to [streamlit.io/cloud](https://streamlit.io/cloud)
-2. Click "New app"
-3. Select your repository
-4. Select main branch
-5. Set main file path: `streamlit_app/app.py`
-6. Click "Deploy"
+---
 
-### Step 4: Configure Secrets
-1. In Streamlit Cloud dashboard, click "Advanced settings"
-2. Add secrets:
-   ```
-   DB_PATH = "data/statarb.db"
-   DATA_DIR = "data/"
-   ```
+### Step 2: Go to Streamlit Cloud
 
-### Step 5: Enable GitHub Integration
-1. Go to app settings
-2. Enable GitHub Action on push
-3. Pipeline runs automatically on commits
+Visit: https://share.streamlit.io/
 
-## Option 2: Docker Deployment
+Click blue **"New app"** button
 
-### Build Docker Image
-```bash
-docker build -t statarb-platform:latest .
+---
+
+### Step 3: Connect GitHub Repo
+
+1. **Select Repository**
+   - Choose your GitHub account
+   - Select `Statistical` repository
+   - Select `main` branch
+
+2. **Set Main File**
+   - Path: `streamlit_app/app.py`
+   - Click **Deploy**
+
+**That's it!** Streamlit handles everything else.
+
+---
+
+### Step 4: Wait for Deployment
+
+You'll see a progress bar:
+- Installing dependencies (1 min)
+- Running app (30 sec)
+- Live! (30 sec)
+
+Total: ~2 minutes
+
+---
+
+### Step 5: Access Your Dashboard
+
+Your app URL:
+```
+https://share.streamlit.io/yourusername/Statistical/main/streamlit_app/app.py
 ```
 
-### Run Locally
-```bash
-docker run -p 8501:8501 \
-  -v $(pwd)/data:/app/data \
-  -e DB_PATH=/app/data/statarb.db \
-  statarb-platform:latest
+**Share with anyone!** They can use it immediately. 🎉
+
+---
+
+## 🔄 Auto-Updates
+
+Every day at **6 PM IST**, GitHub Actions automatically:
+- Downloads fresh stock data
+- Updates signals
+- Pushes results to GitHub
+- **Your dashboard refreshes automatically!**
+
+No manual work needed. Just runs in the background.
+
+---
+
+## 📊 Monitor Your Deployment
+
+### In Streamlit Cloud:
+1. Go to https://share.streamlit.io
+2. Click your app
+3. See "App health" and "Recent runs"
+4. View logs if needed
+
+### In GitHub:
+1. Go to your repo
+2. Click "Actions" tab
+3. See `daily_update.yml` runs
+4. Check if data/signals updated
+
+---
+
+## 🛠️ Troubleshooting
+
+### "App not loading"
+- Wait 2-3 minutes for first deployment
+- Check app status in Streamlit Cloud dashboard
+- Check GitHub Actions logs
+
+### "Requirements error"
+- Ensure `requirements.txt` is properly formatted
+- Check for typos in package names
+- Try locally first: `pip install -r requirements.txt`
+
+### "Database not found"
+- Database is created automatically on first run
+- It persists across app restarts
+- Data files stored in Streamlit Cloud's file system
+
+### "Daily updates not running"
+- Check GitHub repo's Actions tab
+- Ensure `.github/workflows/daily_update.yml` exists
+- Verify file is in `main` branch
+
+---
+
+## 📈 Performance Tips
+
+### Streamlit Cloud Limitations
+- **Memory**: 1 GB available
+- **CPU**: 1 vCPU
+- **Storage**: Limited temporary space
+- **Runtime**: 1 hour max for scripts
+
+Our app uses minimal resources, so no issues!
+
+### Optimize if Needed
+- Limit correlation window (adjust in `config.py`)
+- Cache data locally instead of recalculating
+- Use `@st.cache_data` decorators (already done)
+
+---
+
+## 🚨 Important Notes
+
+### Cost
+- **Free tier**: Unlimited apps
+- **Pro tier**: $5-20/month (optional, not needed)
+- Our app fits comfortably in free tier
+
+### Data Privacy
+- Your code is public on GitHub
+- Stock data is public (Yahoo Finance)
+- No secrets stored in code (hardcoded generic values)
+- No API keys or credentials needed
+
+### Uptime
+- Streamlit Cloud apps sleep after 7 days of no views
+- Access triggers wake-up automatically
+- Still free!
+
+---
+
+## 🎯 What Happens After Deploy
+
+1. **Streamlit Cloud runs your app:**
+   - Installs `requirements.txt` packages
+   - Executes `streamlit_app/app.py`
+   - Serves on the web
+
+2. **GitHub Actions runs daily (6 PM IST):**
+   - Runs `src/pipeline.py`
+   - Downloads new stock data
+   - Generates new signals
+   - Pushes updates to GitHub
+
+3. **Your dashboard updates automatically:**
+   - Fresh data every day
+   - New signals available
+   - Backtests recalculated
+   - Zero manual work!
+
+---
+
+## 📱 Share Your Dashboard
+
+Once live, share the URL:
+```
+https://share.streamlit.io/yourusername/Statistical/main/streamlit_app/app.py
 ```
 
-### Docker Compose
-```bash
-docker-compose up -d
+**Friends can:**
+- View your signals
+- Run backtests
+- Explore pairs
+- Download analytics
 
-# Check logs
-docker-compose logs -f statarb-app
+**They cannot:**
+- Modify code
+- Change data
+- Affect your app
 
-# Stop
-docker-compose down
-```
+---
 
-## Option 3: AWS Deployment
+## 🆘 Get Help
 
-### Using CloudRun
-```bash
-# Build and push to Container Registry
-gcloud builds submit --tag gcr.io/YOUR_PROJECT/statarb-platform
+**Streamlit Issues:**
+- Docs: docs.streamlit.io
+- Community: discuss.streamlit.io
 
-# Deploy
-gcloud run deploy statarb-platform \
-  --image gcr.io/YOUR_PROJECT/statarb-platform \
-  --platform managed \
+**GitHub Actions Issues:**
+- Docs: github.com/features/actions
+- Check workflow file: `.github/workflows/daily_update.yml`
+
+**Our Project Issues:**
+- Check logs locally first
+- Ensure setup.bat/setup.sh completed
+- Verify requirements.txt installed
+
+---
+
+## ✨ Next Steps
+
+After deployment:
+
+1. **Test the live app** - Confirm all pages work
+2. **Share with friends** - Get feedback
+3. **Monitor updates** - Check GitHub Actions logs
+4. **Customize thresholds** - Edit `config.py` → commit → auto-redeploy
+5. **Analyze performance** - Use backtest page
+
+---
+
+**Your dashboard is live! 🚀**
+
   --region us-central1 \
   --memory 2Gi \
   --port 8501

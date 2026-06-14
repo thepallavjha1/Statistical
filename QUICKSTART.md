@@ -1,103 +1,157 @@
-# Quick Start Guide
+# ⚡ Quick Start Guide (5 Minutes)
 
-Get the Statistical Arbitrage Platform running in 5 minutes!
+Get the Statistical Arbitrage Platform running on your machine RIGHT NOW!
 
-## 🚀 Option 1: Quick Streamlit Run (Easiest)
+---
+
+## 🎯 The Fastest Way
 
 ### Windows
 ```bash
-# Clone and setup
-git clone <repository-url>
-cd statarb-platform
-python -m venv venv
+cd C:\Users\Asus\Statistical
+setup.bat
+```
+
+**That's it!** The script handles:
+- ✓ Virtual environment setup
+- ✓ Dependencies installation
+- ✓ Database initialization
+- ✓ Sample data generation
+
+### Mac/Linux
+```bash
+cd ~/Statistical
+chmod +x setup.sh
+./setup.sh
+```
+
+---
+
+## ▶️ Run the Dashboard
+
+### After Setup, Activate Environment
+
+**Windows:**
+```bash
 venv\Scripts\activate
-pip install -r requirements.txt
-
-# Run app
 streamlit run streamlit_app/app.py
 ```
 
-### macOS/Linux
+**Mac/Linux:**
 ```bash
-git clone <repository-url>
-cd statarb-platform
-python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
-
 streamlit run streamlit_app/app.py
 ```
 
-Then open [http://localhost:8501](http://localhost:8501) in your browser.
+---
+
+## 🌐 Open in Browser
+
+Visit: **http://localhost:8501**
+
+That's all! You're running the platform now! 🎉
 
 ---
 
-## 🐳 Option 2: Docker (Fastest)
+## 📊 What You'll See
 
-```bash
-# Clone
-git clone <repository-url>
-cd statarb-platform
+### Home Page
+- Overview of all signals
+- Top opportunities
+- Quick statistics
 
-# Build and run
-docker build -t statarb .
-docker run -p 8501:8501 -v $(pwd)/data:/app/data statarb
+### Signals Dashboard
+- All trading signals
+- Filters by signal type
+- Z-score distribution
+
+### Pair Explorer
+- Search any pair
+- View charts
+- Check cointegration
+- Analyze correlations
+
+### Backtest
+- Test strategies
+- Custom thresholds
+- Performance metrics
+
+### Analytics
+- Statistical analysis
+- Opportunity rankings
+- CSV export
+
+---
+
+## 🔧 Customizing
+
+### Change Signal Thresholds
+Edit `config.py`:
+```python
+LONG_THRESHOLD = -2.0    # Change this
+SHORT_THRESHOLD = 2.0    # Or this
+EXIT_THRESHOLD = 0.5     # Or this
 ```
 
-Open [http://localhost:8501](http://localhost:8501)
+Refresh the browser - changes take effect immediately!
 
 ---
 
-## 📊 Option 3: Pipeline Only (No UI)
+## ⚠️ Troubleshooting
 
+**"Python not found"**
+- Install Python 3.8+ from https://python.org
+- Add to PATH during installation
+
+**"Module not found" error**
+- Make sure virtual environment is activated:
+  - Windows: `venv\Scripts\activate`
+  - Mac/Linux: `source venv/bin/activate`
+
+**Port 8501 already in use**
 ```bash
-# Setup (same as above)
-git clone <repository-url>
-cd statarb-platform
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+streamlit run streamlit_app/app.py --server.port 8502
+```
 
-# Initialize database
+**Database error**
+```bash
 python initialize_db.py
-
-# Generate test data
-python generate_test_data.py
-
-# Run pipeline
-python src/pipeline.py
 ```
 
 ---
 
-## 💡 First Steps
+## 🚀 Next: Deploy to Cloud
 
-### 1. **Explore the Home Page**
-   - See platform overview
-   - Check current signals
-   - Quick action buttons
+Once working locally:
 
-### 2. **View Signals Dashboard**
-   - Real-time signal updates
-   - Filter by type and strength
-   - Analyze distributions
+```bash
+# Push to GitHub
+git add .
+git commit -m "Working version"
+git push origin main
+```
 
-### 3. **Search a Pair**
-   - Go to "Pair Explorer"
-   - Enter stock symbols (e.g., RELIANCE, TCS)
-   - View charts and statistics
+Then:
+1. Go to https://share.streamlit.io
+2. Create new app
+3. Select your repo
+4. Set main file: `streamlit_app/app.py`
+5. Click Deploy
 
-### 4. **Run a Backtest**
-   - Select a pair
-   - Set entry/exit thresholds
-   - View performance metrics
-
-### 5. **Check Analytics**
-   - See opportunity rankings
-   - Analyze cointegration results
-   - Download data
+**Live in 2 minutes!** 🌟
 
 ---
+
+## 📚 More Help
+
+- **Full setup**: [SIMPLE_START.md](SIMPLE_START.md)
+- **How it works**: [ALGORITHM.md](ALGORITHM.md)
+- **Deploy options**: [DEPLOYMENT.md](DEPLOYMENT.md)
+
+---
+
+**Happy pair trading!** 📈
+
 
 ## 📚 Key Concepts
 

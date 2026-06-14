@@ -10,6 +10,12 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import logging
 
+# Import configuration
+try:
+    from config import DATA_DIR
+except ImportError:
+    DATA_DIR = None
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -23,7 +29,9 @@ class DataIngestionManager:
     def __init__(self, data_dir: str = None):
         """Initialize data manager."""
         if data_dir is None:
-            data_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'data')
+            data_dir = DATA_DIR if DATA_DIR else os.path.join(
+                os.path.dirname(__file__), '..', '..', 'data'
+            )
         self.data_dir = data_dir
         os.makedirs(data_dir, exist_ok=True)
     

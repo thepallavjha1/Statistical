@@ -34,9 +34,6 @@ jobs:
         pip install -r requirements.txt
     
     - name: Run Statistical Arbitrage Pipeline
-      env:
-        DB_PATH: ${{ secrets.DB_PATH }}
-        DATA_DIR: ${{ secrets.DATA_DIR }}
       run: |
         python src/pipeline.py
     
@@ -58,25 +55,4 @@ jobs:
         fi
       
       # Continue even if no changes
-      continue-on-error: true
-    
-    - name: Send Slack notification on failure
-      if: failure()
-      uses: slackapi/slack-github-action@v1.24.0
-      with:
-        payload: |
-          {
-            "text": "Statistical Arbitrage Pipeline Failed",
-            "blocks": [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": "*Daily Pipeline Run Failed* ⚠️\n*Repository:* ${{ github.repository }}\n*Branch:* ${{ github.ref }}\n*Run:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
-                }
-              }
-            ]
-          }
-        webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-        webhook-type: incoming-webhook
       continue-on-error: true
