@@ -82,6 +82,11 @@ if 'selected_pair' not in st.session_state:
 if 'page' not in st.session_state:
     st.session_state.page = 'Home'
 
+# Handle redirection requests
+if 'redirect_to' in st.session_state:
+    st.session_state.nav_radio = st.session_state.redirect_to
+    del st.session_state.redirect_to
+
 # Sidebar navigation
 st.sidebar.title("📊 Statistical Arbitrage Platform")
 st.sidebar.markdown("---")

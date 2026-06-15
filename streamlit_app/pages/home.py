@@ -100,7 +100,7 @@ def show():
             selected_row_idx = event.selection["rows"][0]
             selected_row = df.iloc[selected_row_idx]
             st.session_state.selected_pair = (selected_row['Stock A'], selected_row['Stock B'])
-            st.session_state.nav_radio = "Pair Explorer"
+            st.session_state.redirect_to = "Pair Explorer"
             st.rerun()
     else:
         st.info("No active signals in the last 24 hours. Run the pipeline to generate signals.")
@@ -127,12 +127,12 @@ def show():
     
     with col2:
         if st.button("📊 View Signal Dashboard", use_container_width=True):
-            st.session_state.page = "Signal Dashboard"
+            st.session_state.redirect_to = "Signal Dashboard"
             st.rerun()
     
     with col3:
         if st.button("🔎 Explore Pairs", use_container_width=True):
-            st.session_state.page = "Pair Explorer"
+            st.session_state.redirect_to = "Pair Explorer"
             st.rerun()
     
     st.markdown("---")

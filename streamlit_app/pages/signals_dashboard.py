@@ -96,7 +96,7 @@ def show():
             selected_row_idx = event.selection["rows"][0]
             selected_row = df.iloc[selected_row_idx]
             st.session_state.selected_pair = (selected_row['Stock A'], selected_row['Stock B'])
-            st.session_state.nav_radio = "Pair Explorer"
+            st.session_state.redirect_to = "Pair Explorer"
             st.rerun()
         
         st.markdown("---")
