@@ -195,7 +195,7 @@ def show():
         # Spread chart
         st.subheader("Spread Chart")
         
-        if not spread_stats.empty:
+        if spread_stats:
             spread = prices_a.values - hedge_ratio * prices_b.values
             mean_spread = spread_stats['mean_spread']
             
