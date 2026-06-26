@@ -86,8 +86,8 @@ def show():
             st.error(f"Could not load data for {symbol_a} or {symbol_b}")
             return
         
-        # Align dates
-        common_dates = prices_a.index.intersection(prices_b.index)
+        # Align dates and sort chronologically
+        common_dates = prices_a.index.intersection(prices_b.index).sort_values()
         prices_a = prices_a[common_dates]
         prices_b = prices_b[common_dates]
         
@@ -118,7 +118,8 @@ def show():
             st.metric("Half-Life", f"{half_life:.1f} days")
         
         with col4:
-            z_score = (prices_a.iloc[-1] - spread_stats.get('mean_spread', 0)) / spread_stats.get('std_spread', 1)
+            current_spread = spread_stats.get('current_spread', 0.0)
+            z_score = (current_spread - spread_stats.get('mean_spread', 0.0)) / spread_stats.get('std_spread', 1.0)
             st.metric("Current Z-Score", f"{z_score:.2f}")
         
         st.markdown("---")
