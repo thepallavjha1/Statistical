@@ -56,6 +56,16 @@ def show():
         # Get all positions
         positions = session.query(VirtualPosition).all()
         
+        # Deduplicate positions list for display and calculation (safety against database races)
+        seen_pos_keys = set()
+        unique_positions = []
+        for pos in positions:
+            key = tuple(sorted([pos.stock_a, pos.stock_b]))
+            if key not in seen_pos_keys:
+                seen_pos_keys.add(key)
+                unique_positions.append(pos)
+        positions = unique_positions
+        
         # Calculate current position values and unrealized PnL
         position_list = []
         unrealized_pnl = 0.0
@@ -171,6 +181,16 @@ def show():
         history = session.query(VirtualTradeHistory).order_by(VirtualTradeHistory.exit_date.desc()).all()
         
         if history:
+            # Deduplicate completed trades history list
+            seen_hist_keys = set()
+            unique_history = []
+            for h in history:
+                key = (h.stock_a, h.stock_b, h.position_type, h.entry_date, h.exit_date)
+                if key not in seen_hist_keys:
+                    seen_hist_keys.add(key)
+                    unique_history.append(h)
+            history = unique_history
+            
             history_list = []
             for h in history:
                 history_list.append({

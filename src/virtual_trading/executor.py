@@ -47,7 +47,27 @@ class VirtualTrader:
         """Run daily virtual trading round: check exits, then entries, and update equity."""
         session = self.db.get_session()
         try:
+            # Clean up duplicate portfolios if they exist (safeguard against concurrent worker races)
+            portfolios = session.query(VirtualPortfolio).all()
+            if len(portfolios) > 1:
+                logger.warning(f"Found {len(portfolios)} portfolio records. Keeping only the first one.")
+                for p in portfolios[1:]:
+                    session.delete(p)
+                session.commit()
+                
             portfolio = self.get_portfolio(session)
+            
+            # Clean up duplicate positions if they exist in the database (safeguard against race conditions)
+            all_pos = session.query(VirtualPosition).all()
+            seen_pairs = set()
+            for pos in all_pos:
+                pair_key = tuple(sorted([pos.stock_a, pos.stock_b]))
+                if pair_key in seen_pairs:
+                    logger.warning(f"Found duplicate position in DB for {pos.stock_a}-{pos.stock_b}. Deleting it.")
+                    session.delete(pos)
+                else:
+                    seen_pairs.add(pair_key)
+            session.commit()
             
             # Step 1: Manage and Close Positions
             open_positions = session.query(VirtualPosition).all()
