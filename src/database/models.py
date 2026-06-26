@@ -7,6 +7,7 @@ from sqlalchemy import create_engine, Column, String, Float, DateTime, Integer, 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
+import threading
 
 Base = declarative_base()
 
@@ -177,40 +178,54 @@ class DatabaseManager:
     """Manages database connections and sessions."""
     
     _instance = None
+    _lock = threading.Lock()
     
     def __new__(cls, db_path: str = None):
-        if db_path is not None:
-            normalized_path = f"sqlite:///{db_path}"
-            if cls._instance is not None and cls._instance.db_path != normalized_path:
+        with cls._lock:
+            if db_path is not None:
+                normalized_path = f"sqlite:///{db_path}"
+                if cls._instance is not None and cls._instance.db_path != normalized_path:
+                    # Create a separate, non-singleton instance for a different database path
+                    db_dir = os.path.dirname(db_path)
+                    if db_dir:
+                        os.makedirs(db_dir, exist_ok=True)
+                    instance = super(DatabaseManager, cls).__new__(cls)
+                    instance.db_path = normalized_path
+                    instance.engine = create_engine(normalized_path)
+                    instance.SessionLocal = sessionmaker(
+                        bind=instance.engine,
+                        expire_on_commit=False
+                    )
+                    Base.metadata.create_all(instance.engine)
+                    return instance
+
+            if cls._instance is None:
+                if db_path is None:
+                    try:
+                        from config import DB_PATH
+                        db_path = DB_PATH
+                    except ImportError:
+                        db_path = os.path.join(
+                            os.path.dirname(__file__),
+                            '..', '..', 'data', 'statarb.db'
+                        )
+                
+                # Ensure directory exists
+                db_dir = os.path.dirname(db_path)
+                if db_dir:
+                    os.makedirs(db_dir, exist_ok=True)
+                    
                 instance = super(DatabaseManager, cls).__new__(cls)
-                instance.db_path = normalized_path
-                instance.engine = create_engine(normalized_path)
+                instance.db_path = f"sqlite:///{db_path}"
+                instance.engine = create_engine(instance.db_path)
                 instance.SessionLocal = sessionmaker(
                     bind=instance.engine,
                     expire_on_commit=False
                 )
                 Base.metadata.create_all(instance.engine)
-                return instance
-
-        if cls._instance is None:
-            cls._instance = super(DatabaseManager, cls).__new__(cls)
-            if db_path is None:
-                try:
-                    from config import DB_PATH
-                    db_path = DB_PATH
-                except ImportError:
-                    db_path = os.path.join(
-                        os.path.dirname(__file__),
-                        '..', '..', 'data', 'statarb.db'
-                    )
-            cls._instance.db_path = f"sqlite:///{db_path}"
-            cls._instance.engine = create_engine(cls._instance.db_path)
-            cls._instance.SessionLocal = sessionmaker(
-                bind=cls._instance.engine,
-                expire_on_commit=False
-            )
-            Base.metadata.create_all(cls._instance.engine)
-        return cls._instance
+                cls._instance = instance
+                
+            return cls._instance
     
     def get_session(self):
         """Get a new database session."""
