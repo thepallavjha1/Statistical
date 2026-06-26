@@ -93,7 +93,7 @@ st.sidebar.markdown("---")
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Home", "Signal Dashboard", "Pair Explorer", "Backtest", "Analytics"],
+    ["Home", "Signal Dashboard", "Pair Explorer", "Backtest", "Analytics", "Virtual Portfolio"],
     key="nav_radio"
 )
 
@@ -131,6 +131,10 @@ elif page == "Backtest":
 elif page == "Analytics":
     from pages import analytics
     analytics.show()
+
+elif page == "Virtual Portfolio":
+    from pages import virtual_portfolio
+    virtual_portfolio.show()
 
 # Footer
 st.markdown("---")

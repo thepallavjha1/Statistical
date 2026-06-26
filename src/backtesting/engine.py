@@ -122,9 +122,8 @@ class BacktestingEngine:
                     entry_price_b = prices_b[i]
                     # Buy A, Sell B
                     shares_a = (cash * 0.95) / entry_price_a
-                    shares_b = (shares_a * hedge_ratio) if hedge_ratio > 0 else 0
-                    cash -= shares_a * entry_price_a
-                    cash += shares_b * entry_price_b
+                    shares_b = -(shares_a * hedge_ratio) if hedge_ratio > 0 else 0
+                    cash = cash - shares_a * entry_price_a - shares_b * entry_price_b
                     entry_date = dates[i]
                     entry_z = current_z
                 
@@ -136,8 +135,7 @@ class BacktestingEngine:
                     # Sell A, Buy B
                     shares_a = -(cash * 0.95) / entry_price_a
                     shares_b = -(shares_a * hedge_ratio) if hedge_ratio > 0 else 0
-                    cash -= shares_a * entry_price_a
-                    cash += shares_b * entry_price_b
+                    cash = cash - shares_a * entry_price_a - shares_b * entry_price_b
                     entry_date = dates[i]
                     entry_z = current_z
             
@@ -163,8 +161,7 @@ class BacktestingEngine:
                         'holding_days': (dates[i] - entry_date).days
                     })
                     
-                    cash += shares_a * exit_price_a
-                    cash += shares_b * exit_price_b
+                    cash = cash + shares_a * exit_price_a + shares_b * exit_price_b
                     shares_a = 0
                     shares_b = 0
                     position = None

@@ -28,8 +28,8 @@ CORRELATION_THRESHOLD = 0.7  # Minimum correlation for pair selection
 COINTEGRATION_PVALUE = 0.05  # P-value threshold for cointegration test
 
 # === Stock Universe ===
-STOCK_UNIVERSE = "NIFTY500"  # NIFTY50, NIFTY100, NIFTY500
-UNIVERSE_FILE = str(PROJECT_ROOT / "config" / "nifty500.csv")
+STOCK_UNIVERSE = "NIFTY50"  # NIFTY50, NIFTY100, NIFTY500
+UNIVERSE_FILE = str(PROJECT_ROOT / "config" / "nifty50.csv")
 
 # === Data Download Configuration ===
 YFINANCE_RATE_LIMIT = 0.1   # Rate limit in seconds

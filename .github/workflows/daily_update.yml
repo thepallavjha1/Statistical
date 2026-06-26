@@ -2,8 +2,8 @@ name: Daily Statistical Arbitrage Pipeline
 
 on:
   schedule:
-    # Run at 6 PM IST (12:30 PM UTC) every day
-    - cron: '30 12 * * *'
+    # Run at 10 AM IST (4:30 AM UTC) every day
+    - cron: '30 4 * * *'
   
   # Allow manual trigger
   workflow_dispatch:

@@ -280,6 +280,69 @@ def init_sample_data():
         current_spread=139.8, signal_strength=0.0
     )
 
+    # === Seed Virtual Trading Sample Data ===
+    print("\nSeeding Virtual Paper Trading tables...")
+    from src.database.models import VirtualPortfolio, VirtualPosition, VirtualTradeHistory
+    session = db_ops.db.get_session()
+    
+    # 1. Virtual Portfolio (1 Crore pool, cash adjusted for entered positions)
+    portfolio = VirtualPortfolio(
+        initial_capital=10000000.0,
+        cash=9527500.0,
+        equity=10000000.0,
+        last_updated=datetime.utcnow()
+    )
+    session.add(portfolio)
+    
+    # 2. Virtual Open Positions
+    # TCS-INFY (LONG)
+    pos_1 = VirtualPosition(
+        stock_a='TCS', stock_b='INFY',
+        position_type='LONG',
+        hedge_ratio=0.50,
+        shares_a=333.33,
+        shares_b=-166.67,
+        entry_price_a=3000.0,
+        entry_price_b=1500.0,
+        entry_date=datetime.now() - timedelta(days=5),
+        entry_z_score=-2.35
+    )
+    # ICICIBANK-AXISBANK (SHORT)
+    pos_2 = VirtualPosition(
+        stock_a='ICICIBANK', stock_b='AXISBANK',
+        position_type='SHORT',
+        hedge_ratio=0.85,
+        shares_a=-1111.11,
+        shares_b=944.44,
+        entry_price_a=900.0,
+        entry_price_b=765.0,
+        entry_date=datetime.now() - timedelta(days=3),
+        entry_z_score=2.42
+    )
+    session.add_all([pos_1, pos_2])
+    
+    # 3. Virtual Completed Trade History
+    history_1 = VirtualTradeHistory(
+        stock_a='BAJAJFINSV', stock_b='HDFCBANK',
+        position_type='LONG',
+        entry_date=datetime.now() - timedelta(days=10),
+        exit_date=datetime.now() - timedelta(days=2),
+        entry_price_a=1500.0,
+        entry_price_b=150.0,
+        exit_price_a=1550.0,
+        exit_price_b=148.0,
+        shares_a=666.67,
+        shares_b=-600.0,
+        pnl=34533.5,
+        return_pct=3.45
+    )
+    session.add(history_1)
+    session.commit()
+    session.close()
+    print("  [OK] Virtual portfolio initialized with Rs. 1 Crore.")
+    print("  [OK] Sample positions seeded (TCS-INFY, ICICIBANK-AXISBANK).")
+    print("  [OK] Completed trade seeded (BAJAJFINSV-HDFCBANK).")
+
     print("\n" + "=" * 60)
     print("DATABASE INITIALIZATION COMPLETE!")
     print("=" * 60)

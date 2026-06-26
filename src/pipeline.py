@@ -107,6 +107,15 @@ class StatArbPipeline:
             logger.info(f"Stored {len(cointegrated_pairs)} cointegration results")
             logger.info(f"Stored {len(signals)} signals")
             
+            # Step 8: Execute Virtual Paper Trading
+            try:
+                from src.virtual_trading.executor import get_virtual_trader
+                logger.info("\n[STEP 8] Executing Virtual Paper Trading...")
+                virtual_trader = get_virtual_trader()
+                virtual_trader.execute_trading_round(signals)
+            except Exception as vt_err:
+                logger.error(f"Virtual trading execution failed: {str(vt_err)}", exc_info=True)
+            
             # Create summary
             summary = {
                 'timestamp': datetime.utcnow(),

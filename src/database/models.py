@@ -174,6 +174,63 @@ class BacktestResult(Base):
         return f"<BacktestResult {self.stock_a}-{self.stock_b} return={self.total_return:.2f}%>"
 
 
+class VirtualPortfolio(Base):
+    """Stores status of the virtual portfolio."""
+    __tablename__ = 'virtual_portfolio'
+    
+    id = Column(Integer, primary_key=True)
+    initial_capital = Column(Float, default=10000000.0) # 1 Crore INR
+    cash = Column(Float, default=10000000.0)
+    equity = Column(Float, default=10000000.0)
+    last_updated = Column(DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<VirtualPortfolio cash={self.cash:.2f} equity={self.equity:.2f}>"
+
+
+class VirtualPosition(Base):
+    """Stores open virtual trade positions."""
+    __tablename__ = 'virtual_positions'
+    
+    id = Column(Integer, primary_key=True)
+    stock_a = Column(String(20), nullable=False, index=True)
+    stock_b = Column(String(20), nullable=False, index=True)
+    position_type = Column(String(20), nullable=False) # LONG or SHORT
+    hedge_ratio = Column(Float, nullable=False)
+    shares_a = Column(Float, nullable=False)
+    shares_b = Column(Float, nullable=False)
+    entry_price_a = Column(Float, nullable=False)
+    entry_price_b = Column(Float, nullable=False)
+    entry_date = Column(DateTime, default=datetime.utcnow, index=True)
+    entry_z_score = Column(Float)
+    
+    def __repr__(self):
+        return f"<VirtualPosition {self.stock_a}-{self.stock_b} {self.position_type}>"
+
+
+class VirtualTradeHistory(Base):
+    """Stores completed virtual trades."""
+    __tablename__ = 'virtual_trade_history'
+    
+    id = Column(Integer, primary_key=True)
+    stock_a = Column(String(20), nullable=False, index=True)
+    stock_b = Column(String(20), nullable=False, index=True)
+    position_type = Column(String(20), nullable=False)
+    entry_date = Column(DateTime, nullable=False)
+    exit_date = Column(DateTime, default=datetime.utcnow, index=True)
+    entry_price_a = Column(Float, nullable=False)
+    entry_price_b = Column(Float, nullable=False)
+    exit_price_a = Column(Float, nullable=False)
+    exit_price_b = Column(Float, nullable=False)
+    shares_a = Column(Float, nullable=False)
+    shares_b = Column(Float, nullable=False)
+    pnl = Column(Float)
+    return_pct = Column(Float)
+    
+    def __repr__(self):
+        return f"<VirtualTradeHistory {self.stock_a}-{self.stock_b} pnl={self.pnl:.2f}>"
+
+
 class DatabaseManager:
     """Manages database connections and sessions."""
     
